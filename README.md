@@ -89,7 +89,7 @@ We extract comprehensive text-based features including:
 ### 3. **Sparse and Interpretable Models**
 - **Goal:** Make models more sparse and regularized to understand why text is detected as AI
 - **Methods:**
-  - LASSO for feature selection
+  - LASSO for robustness and a bit more sparsity, etc. 
   - Sparse neural networks
   - Interpretability techniques (SHAP, feature importance)
   - Rule extraction from tree-based models
