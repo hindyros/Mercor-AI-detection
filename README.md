@@ -8,8 +8,8 @@
 
 ## Team Information
 
-- **Team Member 1:** [Name] - [Email]
-- **Team Member 2:** [Name] - [Email]
+- **Team Member 1:** Hindy Rossignol - hindyros@mit.edu
+- **Team Member 2:** Elie Juvenspan - ejuven@mit.edu
 
 ---
 
