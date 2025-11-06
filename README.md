@@ -1,1 +1,1 @@
-# MLOpt-Final-Project
+# Mercor AI-detection challenge (MLOpt Final Project)
