@@ -2,7 +2,6 @@
 
 **Course:** 15.095: Machine Learning Under a Modern Optimization Lens (Fall 2025)  
 **Competition:** [Mercor AI Text Detection](https://www.kaggle.com/competitions/mercor-ai-detection/overview)  
-**Due Date:** Project Proposal - November 7, 2025
 
 ---
 
