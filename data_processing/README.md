@@ -2,9 +2,15 @@
 
 This module contains functions for feature engineering and creating different versions of processed datasets.
 
+## Features
+
+- **Meta Features**: Heuristic features extracted from text (length, word count, punctuation, etc.)
+- **Embeddings**: Text embeddings using llama-embed-nemotron-8b or other models
+- **Combined**: Both meta features + embeddings for multimodal learning
+
 ## Quick Start
 
-### 1. Create a Dataset
+### 1. Create a Dataset (Meta Features Only)
 
 ```python
 import pandas as pd
@@ -14,7 +20,7 @@ from data_processing import create_dataset
 train = pd.read_csv('train.csv')
 test = pd.read_csv('test.csv')
 
-# Create baseline dataset
+# Create baseline dataset (meta features only)
 create_dataset(
     train_df=train,
     test_df=test,
@@ -23,50 +29,71 @@ create_dataset(
 )
 ```
 
-### 2. Load a Dataset in Your Notebook
+### 2. Create a Dataset WITH Embeddings
+
+```python
+from data_processing import create_dataset
+
+# Create dataset with embeddings
+create_dataset(
+    train_df=train,
+    test_df=test,
+    dataset_name='with_embeddings',
+    description='Meta features + llama-embed-nemotron-8b embeddings',
+    include_embeddings=True,
+    embedding_model="nvidia/llama-embed-nemotron-8b",
+    batch_size=8  # Adjust based on GPU memory
+)
+```
+
+### 3. Load a Dataset in Your Notebook
 
 ```python
 from data_processing import load_dataset
 
 # Load the dataset
-X_train, y_train, X_test, info = load_dataset('baseline')
+X_train, y_train, X_test, info = load_dataset('with_embeddings')
 
 print(f"Features: {info['n_features']}")
 print(f"Train samples: {info['n_train_samples']}")
-print(f"Feature names: {info['feature_names']}")
-```
-
-### 3. List Available Datasets
-
-```python
-from data_processing import list_available_datasets
-
-datasets = list_available_datasets()
-print(f"Available datasets: {datasets}")
+print(f"Has embeddings: {info.get('include_embeddings', False)}")
+if info.get('embedding_info'):
+    print(f"Embedding dim: {info['embedding_info']['embedding_dim']}")
 ```
 
 ## Creating Different Dataset Versions
 
-You can create multiple versions of datasets for experimentation:
+You can create multiple versions for experimentation:
 
 ```python
-# Version 1: Baseline (all features)
+# Version 1: Baseline (meta features only)
 create_dataset(train, test, 'baseline', 'All meta features + topic')
 
-# Version 2: Without topic encoding
-from data_processing.feature_engineering import extract_text_features
-train_no_topic = extract_text_features(train)
-test_no_topic = extract_text_features(test)
-feature_cols_no_topic = [col for col in train_no_topic.columns 
-                        if col not in ['id', 'topic', 'answer', 'is_cheating']]
-create_dataset(train, test, 'no_topic', 'Meta features without topic encoding',
-               feature_cols=feature_cols_no_topic)
+# Version 2: With embeddings
+create_dataset(train, test, 'with_embeddings', 
+               'Meta features + embeddings',
+               include_embeddings=True)
 
-# Version 3: Only text statistics
-feature_cols_stats = ['text_length', 'word_count', 'char_count_no_spaces', 
-                      'sentence_count', 'paragraph_count']
-create_dataset(train, test, 'text_stats_only', 'Only basic text statistics',
-               feature_cols=feature_cols_stats)
+# Version 3: Embeddings only (no meta features)
+# You can modify feature_cols to exclude meta features
+```
+
+## Direct Usage in Notebooks
+
+You can also use the functions directly without creating datasets:
+
+```python
+from data_processing import prepare_features
+
+# Get features with embeddings
+X_train, y_train, X_test, feature_names, topic_encoder, embedding_info = prepare_features(
+    train_df=train,
+    test_df=test,
+    include_embeddings=True,
+    embedding_model="nvidia/llama-embed-nemotron-8b"
+)
+
+# Now use X_train, y_train for training
 ```
 
 ## Module Structure
@@ -74,7 +101,12 @@ create_dataset(train, test, 'text_stats_only', 'Only basic text statistics',
 - `feature_engineering.py`: Core feature extraction functions
   - `extract_text_features()`: Extract meta features from text
   - `encode_topic()`: Encode topic column
-  - `prepare_features()`: Complete feature preparation pipeline
+  - `prepare_features()`: Complete feature preparation (supports embeddings)
+
+- `embeddings.py`: Text embedding extraction
+  - `EmbeddingExtractor`: Class for extracting embeddings
+  - `extract_embeddings_simple()`: Simple function interface
+  - `average_pool()`: Pooling function for embeddings
 
 - `dataset_creator.py`: Dataset creation and management
   - `create_dataset()`: Create and save a processed dataset
@@ -90,26 +122,41 @@ create_dataset(train, test, 'text_stats_only', 'Only basic text statistics',
 3. **Reproducibility**: Same dataset version = same features
 4. **Efficiency**: No need to recompute features every time
 5. **Organization**: All processed datasets in one place (`processed_data/`)
+6. **Multimodal**: Support for combining meta features + embeddings
 
 ## Example Workflow
 
 ```python
-# In a preprocessing notebook or script
-import pandas as pd
+# Step 1: Create datasets (run once)
 from data_processing import create_dataset
+import pandas as pd
 
 train = pd.read_csv('train.csv')
 test = pd.read_csv('test.csv')
 
-# Create different versions
-create_dataset(train, test, 'baseline', 'Full feature set')
-create_dataset(train, test, 'minimal', 'Minimal features only', 
-               feature_cols=['text_length', 'word_count', 'unique_word_ratio'])
+# Create baseline
+create_dataset(train, test, 'baseline', 'Meta features only')
 
-# In your experiment notebook
+# Create with embeddings (takes longer)
+create_dataset(train, test, 'with_embeddings', 
+               'Meta + embeddings',
+               include_embeddings=True)
+
+# Step 2: Use in your experiment notebook
 from data_processing import load_dataset
 
-X_train, y_train, X_test, info = load_dataset('baseline')
-# Now use X_train, y_train, X_test for your models
+# Load baseline
+X_train_base, y_train, X_test_base, info_base = load_dataset('baseline')
+
+# Load with embeddings
+X_train_full, y_train, X_test_full, info_full = load_dataset('with_embeddings')
+
+# Compare models trained on different feature sets
 ```
 
+## Notes
+
+- Embeddings extraction requires GPU for reasonable speed
+- The llama-embed-nemotron-8b model is large (~16GB), make sure you have enough memory
+- Batch size can be adjusted based on your GPU memory
+- Embeddings are cached in the dataset, so you only need to extract them once

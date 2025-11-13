@@ -2,12 +2,14 @@
 Feature Engineering Functions
 
 Extracted from heuristic_model.ipynb for reuse across notebooks.
+Supports both meta features and embeddings.
 """
 
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
 from typing import Tuple, Optional, List
+from .embeddings import EmbeddingExtractor
 
 
 def extract_text_features(df: pd.DataFrame) -> pd.DataFrame:
@@ -113,10 +115,15 @@ def encode_topic(df: pd.DataFrame, le: Optional[LabelEncoder] = None, fit: bool 
 def prepare_features(
     train_df: pd.DataFrame,
     test_df: Optional[pd.DataFrame] = None,
-    feature_cols: Optional[List[str]] = None
-) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray], List[str], LabelEncoder]:
+    feature_cols: Optional[List[str]] = None,
+    include_embeddings: bool = False,
+    embedding_model: Optional[str] = None,
+    embedding_extractor: Optional[EmbeddingExtractor] = None,
+    batch_size: int = 8
+) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray], List[str], LabelEncoder, Optional[dict]]:
     """
     Prepare features for training and testing.
+    Can include both meta features and embeddings.
     
     Parameters:
     -----------
@@ -126,13 +133,22 @@ def prepare_features(
         Test dataframe
     feature_cols : List[str], optional
         Pre-defined feature columns (for consistency with test set)
+    include_embeddings : bool
+        Whether to include text embeddings
+    embedding_model : str, optional
+        HuggingFace model name for embeddings (if include_embeddings=True)
+    embedding_extractor : EmbeddingExtractor, optional
+        Pre-initialized embedding extractor (reuses if provided)
+    batch_size : int
+        Batch size for embedding extraction
         
     Returns:
     -------
     tuple
-        (X_train, y_train, X_test, feature_names, topic_encoder)
+        (X_train, y_train, X_test, feature_names, topic_encoder, embedding_info)
+        embedding_info contains embedding_dim and model_name if embeddings were used
     """
-    # Extract text features
+    # Extract text features (meta features)
     train_processed = extract_text_features(train_df)
     
     # Encode topics
@@ -143,14 +159,59 @@ def prepare_features(
         feature_cols = [col for col in train_processed.columns 
                        if col not in ['id', 'topic', 'answer', 'is_cheating']]
     
-    X_train = train_processed[feature_cols].values
+    X_train_meta = train_processed[feature_cols].values
     y_train = train_processed['is_cheating'].values
     
+    # Extract embeddings if requested
+    embedding_info = None
+    X_train_embeddings = None
+    X_test_embeddings = None
+    
+    if include_embeddings:
+        # Initialize or reuse embedding extractor
+        if embedding_extractor is None:
+            if embedding_model is None:
+                embedding_model = "nvidia/llama-embed-nemotron-8b"
+            embedding_extractor = EmbeddingExtractor(
+                model_name_or_path=embedding_model,
+                batch_size=batch_size
+            )
+        
+        print("Extracting embeddings for training set...")
+        X_train_embeddings = embedding_extractor.extract_embeddings_from_dataframe(
+            train_df, text_column='answer'
+        )
+        
+        if test_df is not None:
+            print("Extracting embeddings for test set...")
+            X_test_embeddings = embedding_extractor.extract_embeddings_from_dataframe(
+                test_df, text_column='answer'
+            )
+        
+        embedding_info = {
+            'embedding_dim': X_train_embeddings.shape[1],
+            'model_name': embedding_model or embedding_extractor.model_name_or_path
+        }
+    
+    # Combine meta features and embeddings
+    if include_embeddings and X_train_embeddings is not None:
+        X_train = np.hstack([X_train_meta, X_train_embeddings])
+        feature_names = feature_cols + [f'embedding_{i}' for i in range(X_train_embeddings.shape[1])]
+    else:
+        X_train = X_train_meta
+        feature_names = feature_cols.copy()
+    
+    # Process test set
     X_test = None
     if test_df is not None:
         test_processed = extract_text_features(test_df)
         test_processed, _ = encode_topic(test_processed, le=topic_encoder, fit=False)
-        X_test = test_processed[feature_cols].values
+        X_test_meta = test_processed[feature_cols].values
+        
+        if include_embeddings and X_test_embeddings is not None:
+            X_test = np.hstack([X_test_meta, X_test_embeddings])
+        else:
+            X_test = X_test_meta
     
-    return X_train, y_train, X_test, feature_cols, topic_encoder
+    return X_train, y_train, X_test, feature_names, topic_encoder, embedding_info
 

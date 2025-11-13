@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 from typing import Tuple, Optional, Dict, Any
 from .feature_engineering import prepare_features
+from tqdm import tqdm
 
 
 # Directory to store processed datasets
@@ -24,10 +25,14 @@ def create_dataset(
     dataset_name: str = "baseline",
     description: str = "",
     feature_cols: Optional[list] = None,
+    include_embeddings: bool = False,
+    embedding_model: Optional[str] = None,
+    batch_size: int = 8,
     overwrite: bool = False
 ) -> Dict[str, Any]:
     """
     Create and save a processed dataset.
+    Can include both meta features and embeddings.
     
     Parameters:
     -----------
@@ -36,11 +41,17 @@ def create_dataset(
     test_df : pd.DataFrame, optional
         Test dataframe
     dataset_name : str
-        Name for this dataset version (e.g., 'baseline', 'v1', 'no_topic', etc.)
+        Name for this dataset version (e.g., 'baseline', 'with_embeddings', etc.)
     description : str
         Description of what makes this dataset version unique
     feature_cols : list, optional
         Specific feature columns to use (if None, uses all features)
+    include_embeddings : bool
+        Whether to include text embeddings
+    embedding_model : str, optional
+        HuggingFace model name for embeddings (default: nvidia/llama-embed-nemotron-8b)
+    batch_size : int
+        Batch size for embedding extraction
     overwrite : bool
         Whether to overwrite if dataset already exists
         
@@ -57,9 +68,14 @@ def create_dataset(
     if info_file.exists() and not overwrite:
         raise ValueError(f"Dataset '{dataset_name}' already exists. Use overwrite=True to replace it.")
     
-    # Prepare features
-    X_train, y_train, X_test, feature_names, topic_encoder = prepare_features(
-        train_df, test_df, feature_cols=feature_cols
+    # Prepare features (with or without embeddings)
+    X_train, y_train, X_test, feature_names, topic_encoder, embedding_info = prepare_features(
+        train_df, 
+        test_df, 
+        feature_cols=feature_cols,
+        include_embeddings=include_embeddings,
+        embedding_model=embedding_model,
+        batch_size=batch_size
     )
     
     # Save dataset
@@ -79,6 +95,8 @@ def create_dataset(
         'n_test_samples': len(X_test) if X_test is not None else 0,
         'feature_cols': feature_cols,
         'topic_encoder': topic_encoder,
+        'include_embeddings': include_embeddings,
+        'embedding_info': embedding_info,
         'train_ids': train_df['id'].values if 'id' in train_df.columns else None,
         'test_ids': test_df['id'].values if test_df is not None and 'id' in test_df.columns else None,
     }
@@ -89,6 +107,9 @@ def create_dataset(
     print(f"✓ Dataset '{dataset_name}' created successfully!")
     print(f"  Description: {description}")
     print(f"  Features: {len(feature_names)}")
+    if embedding_info:
+        print(f"  - Meta features: {len(feature_cols) if feature_cols else 'all'}")
+        print(f"  - Embeddings: {embedding_info['embedding_dim']} dims ({embedding_info['model_name']})")
     print(f"  Train samples: {len(y_train)}")
     if X_test is not None:
         print(f"  Test samples: {len(X_test)}")
