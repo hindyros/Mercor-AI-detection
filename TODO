@@ -1,7 +1,7 @@
-- Train on hardest subset (subset selection problem)
-- Implement OCT-H and see if it does betetr than XGBoost
+- Train on hardest subset (subset selection problem) - DO NOW
+- Implement OCT-H and see if it does betetr than XGBoost - DO NOW
 - Train a DNN for prediction, etc. 
-- Use text embeddings on top of tabluar data (multimodality)
+- Use text embeddings on top of tabluar data (multimodality) - DO NOW
 - Make some kind of prescription? 
 - Make model more sparse? Regularize it ! Try and know why a text is detected to be AI and not real text
-- Maybe we can enrich the dataset by generating more AI-text and get more human generated Q&A from other data sources
+- Maybe we can enrich the dataset by generating more AI-text and get more human generated Q&A from other data sources - DO NOW
