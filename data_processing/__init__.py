@@ -41,6 +41,19 @@ except ImportError as e:
     trimmed_loss_subset_selection_gurobi = None
     trimmed_loss_subset_selection_scipy = None
 
+try:
+    from .benchmarking import (
+        load_hc3,
+        evaluate_on_benchmark,
+        benchmark_model
+    )
+except ImportError as e:
+    import warnings
+    warnings.warn(f"Could not import benchmarking functions: {e}")
+    load_hc3 = None
+    evaluate_on_benchmark = None
+    benchmark_model = None
+
 __all__ = [
     'extract_text_features',
     'encode_topic',
@@ -55,6 +68,9 @@ __all__ = [
     'identify_hard_samples',
     'apply_subset_selection',
     'trimmed_loss_subset_selection_gurobi',
-    'trimmed_loss_subset_selection_scipy'
+    'trimmed_loss_subset_selection_scipy',
+    'load_hc3',
+    'evaluate_on_benchmark',
+    'benchmark_model'
 ]
 
