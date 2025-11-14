@@ -37,16 +37,23 @@ This is a supervised learning problem where we predict the probability that a wr
 The dataset comes from the [Mercor AI Text Detection Kaggle Competition](https://www.kaggle.com/competitions/mercor-ai-detection), hosted by Mercor Inc.
 
 ### Dataset Structure
-- **Training Set (`train.csv`):** 269 labeled samples
-  - `id`: Unique identifier
-  - `topic`: The writing topic chosen by the writer
-  - `answer`: The written response (typically 50-300 words)
-  - `is_cheating`: Binary label (0 = authentic, 1 = inauthentic)
+All datasets are organized in the `data/` folder:
+- **Raw Data (`data/raw/`):**
+  - `train.csv`: 269 labeled samples
+    - `id`: Unique identifier
+    - `topic`: The writing topic chosen by the writer
+    - `answer`: The written response (typically 50-300 words)
+    - `is_cheating`: Binary label (0 = authentic, 1 = inauthentic)
+  - `test.csv`: 264 unlabeled samples (same structure as training, without `is_cheating`)
+  - `sample_submission.csv`: Format template for predictions
 
-- **Test Set (`test.csv`):** 264 unlabeled samples
-  - Same structure as training, without `is_cheating`
+- **Processed Data (`data/processed/`):**
+  - Processed datasets, feature-engineered data, and embeddings
+  - `train_for_finetune.csv`, `val_for_finetune.csv`: Train/val splits
+  - `processed_data/`: Feature-engineered datasets with embeddings
 
-- **Sample Submission (`sample_submission.csv`):** Format template for predictions
+- **Submissions (`data/submissions/`):**
+  - All submission files for the competition
 
 ### Dataset Characteristics
 - Writing samples vary in topic, tone, and length

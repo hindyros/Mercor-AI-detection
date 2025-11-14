@@ -14,9 +14,9 @@ from .feature_engineering import prepare_features
 from tqdm import tqdm
 
 
-# Directory to store processed datasets
-PROCESSED_DATA_DIR = Path(__file__).parent.parent / "processed_data"
-PROCESSED_DATA_DIR.mkdir(exist_ok=True)
+# Directory to store processed datasets (in data/processed/processed_data)
+PROCESSED_DATA_DIR = Path(__file__).parent.parent / "data" / "processed" / "processed_data"
+PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def create_dataset(

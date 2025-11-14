@@ -2,6 +2,20 @@
 
 This module contains functions for feature engineering and creating different versions of processed datasets.
 
+## Quick Overview
+
+The module is organized into **7 focused Python files**:
+
+| File | Purpose |
+|------|---------|
+| `feature_engineering.py` | Extract meta features (length, word count, punctuation, etc.) |
+| `embeddings.py` | Extract text embeddings using transformer models |
+| `dataset_creator.py` | Create, save, and load processed dataset versions |
+| `benchmarking.py` | Evaluate models on external benchmark datasets (HC3) |
+| `subset_selection.py` | Optimization-based subset selection methods |
+| `examples.py` | Example scripts showing how to use the module |
+| `__init__.py` | Package initialization and exports |
+
 ## Features
 
 - **Meta Features**: Heuristic features extracted from text (length, word count, punctuation, etc.)
@@ -17,8 +31,8 @@ import pandas as pd
 from data_processing import create_dataset
 
 # Load raw data
-train = pd.read_csv('train.csv')
-test = pd.read_csv('test.csv')
+train = pd.read_csv('data/raw/train.csv')
+test = pd.read_csv('data/raw/test.csv')
 
 # Create baseline dataset (meta features only)
 create_dataset(
@@ -98,22 +112,38 @@ X_train, y_train, X_test, feature_names, topic_encoder, embedding_info = prepare
 
 ## Module Structure
 
-- `feature_engineering.py`: Core feature extraction functions
-  - `extract_text_features()`: Extract meta features from text
-  - `encode_topic()`: Encode topic column
-  - `prepare_features()`: Complete feature preparation (supports embeddings)
+The module is organized into focused, reusable components:
 
-- `embeddings.py`: Text embedding extraction
-  - `EmbeddingExtractor`: Class for extracting embeddings
-  - `extract_embeddings_simple()`: Simple function interface
-  - `average_pool()`: Pooling function for embeddings
+- **`feature_engineering.py`**: Core feature extraction functions
+  - `extract_text_features()`: Extract meta features from text (length, word count, punctuation, etc.)
+  - `encode_topic()`: Encode topic column using LabelEncoder
+  - `prepare_features()`: Complete feature preparation pipeline (supports embeddings)
 
-- `dataset_creator.py`: Dataset creation and management
-  - `create_dataset()`: Create and save a processed dataset
-  - `load_dataset()`: Load a processed dataset
-  - `list_available_datasets()`: List all available datasets
-  - `get_dataset_info()`: Get dataset metadata without loading
-  - `delete_dataset()`: Delete a dataset
+- **`embeddings.py`**: Text embedding extraction using transformer models
+  - `EmbeddingExtractor`: Class for extracting embeddings from text
+  - `extract_embeddings_simple()`: Simple function interface for embeddings
+  - `average_pool()`: Pooling function for converting token-level to sentence-level embeddings
+
+- **`dataset_creator.py`**: Dataset creation and management
+  - `create_dataset()`: Create and save a processed dataset version
+  - `load_dataset()`: Load a previously created dataset
+  - `list_available_datasets()`: List all available dataset versions
+  - `get_dataset_info()`: Get dataset metadata without loading full data
+  - `delete_dataset()`: Delete a dataset version
+
+- **`benchmarking.py`**: Evaluation on external benchmark datasets
+  - `load_hc3()`: Load HC3 (Human ChatGPT Comparison Corpus) dataset
+  - `evaluate_on_benchmark()`: Evaluate a model on a benchmark dataset
+  - `benchmark_model()`: Benchmark a model on multiple datasets
+
+- **`subset_selection.py`**: Optimization-based subset selection methods
+  - `select_hardest_subset()`: Select hardest samples for training
+  - `identify_hard_samples()`: Identify samples that are hard to classify
+  - `trimmed_loss_subset_selection_gurobi()`: Gurobi-based subset selection
+  - `trimmed_loss_subset_selection_scipy()`: SciPy-based subset selection
+
+- **`examples.py`**: Example scripts showing how to use the module
+  - Run `python -m data_processing.examples` to see examples
 
 ## Benefits
 
@@ -121,7 +151,7 @@ X_train, y_train, X_test, feature_names, topic_encoder, embedding_info = prepare
 2. **Version Control**: Create different dataset versions for experiments
 3. **Reproducibility**: Same dataset version = same features
 4. **Efficiency**: No need to recompute features every time
-5. **Organization**: All processed datasets in one place (`processed_data/`)
+5. **Organization**: All processed datasets in one place (`data/processed/processed_data/`)
 6. **Multimodal**: Support for combining meta features + embeddings
 
 ## Example Workflow
@@ -131,8 +161,8 @@ X_train, y_train, X_test, feature_names, topic_encoder, embedding_info = prepare
 from data_processing import create_dataset
 import pandas as pd
 
-train = pd.read_csv('train.csv')
-test = pd.read_csv('test.csv')
+train = pd.read_csv('data/raw/train.csv')
+test = pd.read_csv('data/raw/test.csv')
 
 # Create baseline
 create_dataset(train, test, 'baseline', 'Meta features only')
