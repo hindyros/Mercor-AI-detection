@@ -224,15 +224,35 @@ Aditya Bhandari '25 and Peter Zhang. Mercor AI Text Detection. https://kaggle.co
 
 ---
 
+## Documentation
+
+All instruction and documentation files are organized in the **[`docs/`](docs/)** folder:
+
+- **Model Tracking**: See `docs/README_MODEL_TRACKING.md` for experiment logging system
+- **Data Processing**: See `docs/DATA_PROCESSING_README.md` for feature engineering and dataset creation
+- **Integration Details**: See `docs/MODEL_TRACKING_INTEGRATION.md` for technical implementation
+
+## Model Results & Evaluation
+
+All model experiments are automatically logged to `model_results.csv`. See `docs/README_MODEL_TRACKING.md` for details.
+
+**Quick Summary**:
+- Best models: XGBoost (ROC-AUC: 0.94), RoBERTa Fine-tuned (ROC-AUC: 1.00 ⚠️)
+- Evaluation rigor: 6.5/10 (needs improvement)
+- Key concern: Perfect validation score suggests overfitting
+
 ## Next Steps
 
-1. Complete baseline model training and evaluation
-2. Implement OCT-H and compare with XGBoost
-3. Develop deep neural network architecture
-4. Implement multimodal approach (tabular + embeddings)
-5. Feature selection and sparsity optimization
-6. Interpretability analysis
-7. Final model ensemble and submission
+1. ✅ Complete baseline model training and evaluation
+2. ✅ Implement OCT-H and compare with XGBoost
+3. ✅ Develop deep neural network architecture
+4. ✅ Implement multimodal approach (tabular + embeddings)
+5. ⚠️ Add cross-validation to TransferLearning notebook
+6. ⚠️ Investigate perfect validation score (likely overfitting)
+7. ⚠️ Standardize evaluation protocol across notebooks
+8. Feature selection and sparsity optimization
+9. Interpretability analysis
+10. Final model ensemble and submission
 
 ---
 

@@ -89,17 +89,43 @@ class EmbeddingExtractor:
         
         # Load model
         print(f"Loading model from {model_name_or_path}...")
-        attn_implementation = "flash_attention_2" if torch.cuda.is_available() else "eager"
+        print("⚠️  WARNING: This is a large model (~16GB) and may take several minutes to load/download.")
+        print("   If this hangs, the model may be downloading or loading into memory...")
         
-        self.model = AutoModel.from_pretrained(
-            model_name_or_path,
-            trust_remote_code=True,
-            torch_dtype=torch.float16 if device != "cpu" else torch.float32,
-            attn_implementation=attn_implementation,
-        ).eval()
+        # Determine attention implementation
+        # Only use flash_attention_2 if CUDA is available AND flash-attn is installed
+        attn_implementation = "eager"  # Default to eager (safer, works everywhere)
+        if torch.cuda.is_available():
+            try:
+                import flash_attn
+                attn_implementation = "flash_attention_2"
+                print("   Using flash_attention_2 (CUDA + flash-attn detected)")
+            except ImportError:
+                print("   flash-attn not available, using eager attention")
+                attn_implementation = "eager"
+        else:
+            print(f"   Using eager attention (device: {device})")
         
-        self.model = self.model.to(self.device)
-        print(f"Model loaded on device: {self.device}")
+        # Load model with error handling
+        try:
+            self.model = AutoModel.from_pretrained(
+                model_name_or_path,
+                trust_remote_code=True,
+                torch_dtype=torch.float16 if device != "cpu" else torch.float32,
+                attn_implementation=attn_implementation,
+                low_cpu_mem_usage=True,  # Helps with large models
+            ).eval()
+            
+            self.model = self.model.to(self.device)
+            print(f"✓ Model loaded successfully on device: {self.device}")
+        except Exception as e:
+            print(f"\n❌ ERROR loading model: {e}")
+            print("\nPossible solutions:")
+            print("  1. Check internet connection (model may be downloading)")
+            print("  2. Ensure you have enough disk space (~16GB)")
+            print("  3. Try using a smaller embedding model")
+            print("  4. If on Mac, ensure MPS is available: torch.backends.mps.is_available()")
+            raise
     
     def extract_embeddings(
         self,

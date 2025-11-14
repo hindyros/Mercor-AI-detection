@@ -66,7 +66,21 @@ def create_dataset(
     # Check if dataset already exists
     info_file = dataset_path / "dataset_info.pkl"
     if info_file.exists() and not overwrite:
-        raise ValueError(f"Dataset '{dataset_name}' already exists. Use overwrite=True to replace it.")
+        print(f"✓ Dataset '{dataset_name}' already exists. Using existing dataset.")
+        print(f"  To recreate it, set overwrite=True")
+        # Load and return existing dataset info
+        with open(info_file, 'rb') as f:
+            dataset_info = pickle.load(f)
+        print(f"  Description: {dataset_info.get('description', 'N/A')}")
+        print(f"  Features: {dataset_info.get('n_features', 'N/A')}")
+        if dataset_info.get('include_embeddings'):
+            emb_info = dataset_info.get('embedding_info', {})
+            print(f"  - Meta features: {len([f for f in dataset_info.get('feature_names', []) if not f.startswith('embedding_')])}")
+            print(f"  - Embeddings: {emb_info.get('embedding_dim', 'N/A')} dims ({emb_info.get('model_name', 'N/A')})")
+        print(f"  Train samples: {dataset_info.get('n_train_samples', 'N/A')}")
+        print(f"  Test samples: {dataset_info.get('n_test_samples', 'N/A')}")
+        print(f"  Location: {dataset_path}")
+        return dataset_info
     
     # Prepare features (with or without embeddings)
     X_train, y_train, X_test, feature_names, topic_encoder, embedding_info = prepare_features(

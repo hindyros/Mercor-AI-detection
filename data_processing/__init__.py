@@ -54,6 +54,20 @@ except ImportError as e:
     evaluate_on_benchmark = None
     benchmark_model = None
 
+try:
+    from .hc3_benchmark_utils import benchmark_model_on_hc3
+except ImportError as e:
+    import warnings
+    warnings.warn(f"Could not import HC3 benchmark utils: {e}")
+    benchmark_model_on_hc3 = None
+
+from .model_tracker import (
+    log_model_experiment,
+    get_all_results,
+    get_best_models,
+    print_results_summary
+)
+
 __all__ = [
     'extract_text_features',
     'encode_topic',
@@ -71,6 +85,11 @@ __all__ = [
     'trimmed_loss_subset_selection_scipy',
     'load_hc3',
     'evaluate_on_benchmark',
-    'benchmark_model'
+    'benchmark_model',
+    'benchmark_model_on_hc3',
+    'log_model_experiment',
+    'get_all_results',
+    'get_best_models',
+    'print_results_summary'
 ]
 
